@@ -1,0 +1,259 @@
+
+---
+# Chat Consultant Tasks
+
+t_present_proactive_plan:
+  description: >
+    Translate the technical cleaning plan from the Data Auditor into a friendly and
+    easy-to-understand message for the user. Explain the problems found and the
+    proposed solutions in a conversational tone.
+    Your goal is to get user approval to proceed.
+  expected_output: >
+    A conversational text message to the user, similar to:
+    "Hi there! I've analyzed your data and found some issues. For example, there are 50
+    duplicate rows and inconsistent date formats. Would you like me to fix these for you? (Yes/No)"
+  agent: chat_consultant
+  context:
+    - t_propose_initial_cleaning_plan
+
+---
+# Data Auditor Tasks
+
+t_analyze_dataframe_info:
+  description: >
+    Analyze the raw DataFrame to get basic information about its structure.
+    This includes the number of rows, columns, data types, and non-null counts.
+    Your goal is to provide a comprehensive structural overview of the dataset.
+  expected_output: >
+    A detailed text report summarizing the DataFrame's structure, including column names,
+    data types, and non-null values count for each column.
+  agent: data_auditor
+
+---
+t_find_missing_values:
+  description: >
+    Scan the DataFrame to identify all columns with missing values.
+    Calculate the total count and percentage of missing values for each affected column.
+  expected_output: >
+    A structured report (JSON or markdown list) detailing columns with missing values,
+    their counts, and the percentage relative to the total number of rows.
+  agent: data_auditor
+  context:
+    - t_analyze_dataframe_info
+
+---
+t_detect_duplicates:
+  description: >
+    Check the entire DataFrame for any duplicate rows.
+    Your output should state the total number of duplicate rows found.
+  expected_output: >
+    A simple text message stating the exact number of duplicate rows found, or a confirmation
+    that no duplicates were detected.
+  agent: data_auditor
+  context:
+    - t_analyze_dataframe_info
+
+---
+t_check_data_types_and_inconsistencies:
+  description: >
+    Inspect each column to detect potential data type issues.
+    Identify columns that might be better suited for a different data type (e.g., numbers as strings)
+    and check for mixed data types within a single column.
+  expected_output: >
+    A report detailing any data type inconsistencies, suggesting potential conversions.
+  agent: data_auditor
+  context:
+    - t_analyze_dataframe_info
+
+---
+
+t_check_date_formats:
+  description: >
+    Inspect all datetime-like columns to identify inconsistent date formats.
+    Your analysis should detect if multiple formats (e.g., 'dd/mm/yyyy', 'mm/dd/yyyy', '01 Jan 2025')
+    are present within the same column.
+  expected_output: >
+    A report listing columns with inconsistent date formats and examples of the formats found.
+    If all dates are consistent, state this clearly.
+  agent: data_auditor
+  context:
+    - t_analyze_dataframe_info
+
+---
+t_analyze_numeric_scale_and_format:
+  description: >
+    Analyze numeric columns to identify potential scaling issues and formatting inconsistencies.
+    This includes detecting if numbers are formatted with commas instead of periods
+    for decimals or if they appear to be in thousands or millions compared to other columns.
+    Your goal is to pinpoint columns that might need scale or format standardization.
+  expected_output: >
+    A structured report (JSON or markdown) detailing columns with:
+    - Inconsistent decimal separators (comma vs. period).
+    - Potential scaling issues (e.g., a column in thousands while others are not).
+  agent: data_auditor
+  context:
+    - t_analyze_dataframe_info
+
+---
+
+t_detect_encoding_and_special_chars:
+  description: >
+    Scan the entire dataset for encoding-related errors and special characters that may cause issues.
+    This task should identify the file encoding and detect if non-standard characters
+    are present, signaling a need for a cleaning step.
+  expected_output: >
+    A report on the detected file encoding and a list of columns containing special or non-standard characters.
+  agent: data_auditor
+  context:
+    - t_analyze_dataframe_info
+
+---
+t_identify_outliers:
+  description: >
+    Perform outlier detection on all numeric columns using statistical methods like IQR.
+    Your report should list columns with potential outliers and provide their count and value range.
+    Your goal is to flag these values for a user's review.
+  expected_output: >
+    A report detailing which numeric columns have outliers, along with the number of outliers
+    found and the bounds (lower/upper) of the expected data range.
+  agent: data_auditor
+  context:
+    - t_analyze_dataframe_info
+
+---
+t_analyze_categorical_frequency:
+  description: >
+    Analyze all categorical (object/string) columns to summarize value frequencies.
+    Identify columns with a very high frequency for a single value (predominant) or
+    with values that have a very low frequency (single-occurrence values).
+  expected_output: >
+    A report listing categorical columns with a summary of their value distributions,
+    highlighting predominant values or unique, low-frequency values.
+  agent: data_auditor
+  context:
+    - t_analyze_dataframe_info
+
+---
+t_propose_initial_cleaning_plan:
+  description: >
+    Based on all previous audit tasks, formulate a clear and actionable cleaning plan.
+    Combine all findings from missing values, duplicates, data type checks, date formats,
+    numeric scales, encoding issues, and categorical frequencies into a single list of
+    proposed actions.
+  expected_output: >
+    A structured plan in JSON format containing a comprehensive list of tasks to be
+    performed by the Data Cleaner agent. The plan should be detailed and actionable.
+    Example:
+    [
+      {"task": "remove_duplicates", "details": "Found 50 duplicate rows."},
+      {"task": "fill_missing", "column": "Sales", "details": "25% of values are missing. Suggest filling with the mean."},
+      {"task": "standardize_date_format", "column": "Date", "details": "Dates are in multiple formats. Suggest standardizing to 'dd/mm/yyyy'."},
+      {"task": "normalize_numeric_format", "column": "Price", "details": "The column uses commas as decimal separators. Suggest replacing with periods."},
+      {"task": "fix_encoding", "column": "Description", "details": "Detected non-UTF-8 characters. Suggest re-encoding."},
+      {"task": "standardize_categories", "column": "Product_Category", "details": "Found inconsistent values like 'Heinken' and 'HNK'. Suggest a mapping to 'Heineken'."},
+      {"task": "standardize_column_names", "details": "Found columns with spaces. Suggest converting to snake_case."}
+    ]
+  agent: data_auditor
+  context:
+    - t_find_missing_values
+    - t_detect_duplicates
+    - t_check_data_types_and_inconsistencies
+    - t_check_date_formats
+    - t_analyze_numeric_scale_and_format
+    - t_detect_encoding_and_special_chars
+    - t_analyze_categorical_frequency
+
+
+---
+# Data Cleaner tasks
+
+
+t_standardize_date_formats:
+  description: >
+    Standardize the date format in all identified columns to the 'dd/mm/yyyy' standard.
+    This task should handle multiple input formats (e.g., '01 Jan 2025', 'mm/dd/yyyy') and convert them.
+  expected_output: >
+    The DataFrame with the specified date columns uniformly formatted. A confirmation message
+    listing the columns that were standardized.
+  agent: data_cleaner
+  context:
+    - t_check_date_formats
+
+---
+t_normalize_numeric_formats:
+  description: >
+    Normalize numeric formats by replacing comma-based decimal separators with periods and
+    correcting any scaling issues (e.g., converting values from thousands to standard decimals).
+  expected_output: >
+    The DataFrame with all numeric columns normalized to a consistent decimal format (e.g., 1234.56).
+    A confirmation message detailing the changes made.
+  agent: data_cleaner
+  context:
+    - t_analyze_numeric_scale_and_format
+
+---
+t_fix_encoding_and_characters:
+  description: >
+    Apply the necessary transformations to fix encoding errors and remove special characters
+    from the dataset, ensuring a clean and consistent character set (e.g., UTF-8).
+  expected_output: >
+    The DataFrame with all encoding and character issues resolved. A confirmation message.
+  agent: data_cleaner
+  context:
+    - t_detect_encoding_and_special_chars
+
+---
+t_propose_and_apply_category_standardization:
+  description: >
+    Based on the analysis of categorical frequencies, identify similar but inconsistent
+    values (e.g., 'Heinken', 'HNK', 'Heinkken'). Suggest a single, standardized name
+    for these values and, with user approval, apply the corrections.
+  expected_output: >
+    A summary of the standardized categories and the DataFrame with the updated values.
+    This task should produce a 'de-para' dictionary or table for the Chat Consultant.
+  agent: data_cleaner
+  context:
+    - t_analyze_categorical_frequency
+
+---
+t_standardize_column_names:
+  description: >
+    Standardize all column names to a consistent format (e.g., snake_case, all lowercase).
+    Replace spaces with underscores, remove special characters, and suggest adding 'ID' or 'code'
+    to columns that appear to be keys.
+  expected_output: >
+    The DataFrame with all column names standardized. A confirmation message with a
+    list of the old and new column names.
+  agent: data_cleaner
+  context:
+    - t_propose_initial_cleaning_plan
+
+---
+# Data Modeller tasks
+
+t_propose_data_model:
+  description: >
+    Analyze the cleaned DataFrame to propose a logical data model.
+    Suggest a business-friendly name for the table and identify potential primary keys
+    or relationships that could be built for a BI tool.
+  expected_output: >
+    A structured report (JSON or markdown) with data modeling suggestions.
+  agent: data_modeller
+  context:
+    - t_apply_cleaning_actions
+
+---
+# Chat Consultant final task
+
+t_present_final_report:
+  description: >
+    Combine the results of the cleaning actions and the modeling suggestions into a final,
+    easy-to-read report for the user. Explain what was done and what was suggested
+    for the data model, and offer the option to download the final dataset.
+  expected_output: >
+    A friendly, conversational message summarizing the entire process, including
+    a confirmation that the data is ready for use.
+  agent: chat_consultant
+  context:
+    - t_apply_cleaning_actions
+    - t_propose_data_model
