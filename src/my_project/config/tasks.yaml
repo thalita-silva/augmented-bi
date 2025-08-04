@@ -164,7 +164,7 @@ t_propose_initial_cleaning_plan:
     - t_analyze_categorical_frequency
 
 ---
-# Data Cleaner tasks
+# Data Cleaner Tasks
 
 t_standardize_date_formats:
   description: >
@@ -227,7 +227,7 @@ t_standardize_column_names:
     - t_propose_initial_cleaning_plan
 
 ---
-# Data Modeller tasks
+# Data Modeller Tasks
 
 ---
 t_analyze_dataset_for_modeling:
