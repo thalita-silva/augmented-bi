@@ -4,7 +4,7 @@
 
 t_present_proactive_plan:
   description: >
-    Translate the technical cleaning plan from the Data Auditor into a friendly and
+    Translate the comprehensive technical audit report into a friendly and
     easy-to-understand message for the user. Explain the problems found and the
     proposed solutions in a conversational tone.
     Your goal is to get user approval to proceed.
@@ -163,10 +163,8 @@ t_propose_initial_cleaning_plan:
     - t_detect_encoding_and_special_chars
     - t_analyze_categorical_frequency
 
-
 ---
 # Data Cleaner tasks
-
 
 t_standardize_date_formats:
   description: >
@@ -231,29 +229,82 @@ t_standardize_column_names:
 ---
 # Data Modeller tasks
 
-t_propose_data_model:
+---
+t_analyze_dataset_for_modeling:
   description: >
-    Analyze the cleaned DataFrame to propose a logical data model.
-    Suggest a business-friendly name for the table and identify potential primary keys
-    or relationships that could be built for a BI tool.
+    Analyze the cleaned DataFrame to identify its core entities and potential relationships.
+    This task is the initial step for modeling, where the agent reads the dataset's
+    structure and content to get a high-level understanding of the business context.
   expected_output: >
-    A structured report (JSON or markdown) with data modeling suggestions.
+    A summary report identifying key columns, their purpose (e.g., keys, attributes, measures),
+    and a preliminary assessment of the dataset's granularity.
   agent: data_modeller
   context:
-    - t_apply_cleaning_actions
+    - t_standardize_categories # This is the last cleaning task.
+
+---
+t_propose_table_name:
+  description: >
+    Based on the analysis of the dataset's content and structure, propose a single,
+    business-friendly name for the table. The name should be intuitive and reflect
+    the data's purpose for analysis.
+  expected_output: >
+    A simple text output with a proposed table name, for example: "Sales_Transaction_Data".
+  agent: data_modeller
+  context:
+    - t_analyze_dataset_for_modeling
+
+---
+t_identify_primary_keys:
+  description: >
+    Scan the columns to identify potential primary keys. A primary key must have
+    unique values for each row and serve as a unique identifier for the record.
+    The agent should list columns that meet this criteria.
+  expected_output: >
+    A structured report (JSON or markdown list) of potential primary key columns
+    and a brief justification for each.
+  agent: data_modeller
+  context:
+    - t_propose_table_name
+
+---
+t_propose_bi_structure:
+  description: >
+    Synthesize all previous modeling analyses into a final set of suggestions for the
+    BI semantic layer. This includes the proposed table name, identified primary keys,
+    and a summary of how the dataset is structured for easy consumption by analysts.
+  expected_output: >
+    A comprehensive report detailing the final modeling recommendations, including
+    the suggested table name, primary key(s), and a brief explanation of the dataset's
+    readiness for BI tools like Power BI.
+  agent: data_modeller
+  context:
+    - t_identify_primary_keys
 
 ---
 # Chat Consultant final task
 
 t_present_final_report:
   description: >
-    Combine the results of the cleaning actions and the modeling suggestions into a final,
+    Combine the results of all cleaning actions and the modeling suggestions into a final,
     easy-to-read report for the user. Explain what was done and what was suggested
     for the data model, and offer the option to download the final dataset.
   expected_output: >
     A friendly, conversational message summarizing the entire process, including
-    a confirmation that the data is ready for use.
+    a confirmation that the data is ready for use. The message should include:
+    - A list of all cleaning actions performed (e.g., "removed 50 duplicate rows").
+    - The final modeling suggestions (e.g., "suggested table name: 'Sales_Data'").
+    - A clear, call-to-action to download the cleaned CSV file.
   agent: chat_consultant
   context:
-    - t_apply_cleaning_actions
-    - t_propose_data_model
+    - t_standardize_column_names
+    - t_handle_missing_values
+    - t_remove_duplicates
+    - t_normalize_numeric_formats
+    - t_standardize_date_formats
+    - t_fix_encoding_and_characters
+    - t_propose_and_apply_category_standardization
+    - t_analyze_dataset_for_modeling
+    - t_propose_table_name
+    - t_identify_primary_keys
+    - t_propose_bi_structure
