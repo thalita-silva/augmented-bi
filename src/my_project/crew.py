@@ -1,4 +1,5 @@
 ## NEEDS TO MODIFY TO THIS PROJECT
+## EXCLUIR TOOLS DE TODOS OS CÓDIGOS AQUI
 
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
@@ -7,7 +8,7 @@ from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
 
 @CrewBase
-class LatestAiDevelopmentCrew():
+class AugmentedBI():
   """LatestAiDevelopment crew"""
 
   agents: List[BaseAgent]
