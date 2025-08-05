@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 # Replace with inputs you want to test with, it will automatically
 # interpolate any tasks and agents information
 
-def run_contest_agent(question: str):
+def run_agents(question: str):
     # question = input("Enter your question: ")
     inputs = {
         'question': question

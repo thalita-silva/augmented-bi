@@ -1,6 +1,4 @@
-
----
-# Chat Consultant Tasks
+# Chat Consultant Start Task
 
 ---
 t_initial_greeting_and_confirmation:
@@ -16,6 +14,7 @@ t_initial_greeting_and_confirmation:
 
 # Data Auditor Tasks
 
+---
 t_analyze_dataframe_info:
   description: >
     Analyze the raw DataFrame to get basic information about its structure.
@@ -63,20 +62,6 @@ t_check_data_types_and_inconsistencies:
     - t_analyze_dataframe_info
 
 ---
-
-t_check_date_formats:
-  description: >
-    Inspect all datetime-like columns to identify inconsistent date formats.
-    Your analysis should detect if multiple formats (e.g., 'dd/mm/yyyy', 'mm/dd/yyyy', '01 Jan 2025')
-    are present among the same dataset and other dataframes.
-  expected_output: >
-    A report listing columns with inconsistent date formats and examples of the formats found.
-    If all dates are consistent, state this clearly.
-  agent: data_auditor
-  context:
-    - t_analyze_dataframe_info
-
----
 t_analyze_numeric_scale_and_format:
   description: >
     Analyze numeric columns to identify potential scaling issues and formatting inconsistencies.
@@ -92,7 +77,19 @@ t_analyze_numeric_scale_and_format:
     - t_analyze_dataframe_info
 
 ---
+t_check_date_formats:
+  description: >
+    Inspect all datetime-like columns to identify inconsistent date formats.
+    Your analysis should detect if multiple formats (e.g., 'dd/mm/yyyy', 'mm/dd/yyyy', '01 Jan 2025')
+    are present among the same dataset and other dataframes.
+  expected_output: >
+    A report listing columns with inconsistent date formats and examples of the formats found.
+    If all dates are consistent, state this clearly.
+  agent: data_auditor
+  context:
+    - t_analyze_dataframe_info
 
+---
 t_detect_encoding_and_special_chars:
   description: >
     Scan the entire dataset for encoding-related errors and special characters that may cause issues.
@@ -176,19 +173,35 @@ t_propose_initial_cleaning_plan:
     - t_analyze_categorical_frequency
     - t_identify_date_outliers
 
----
+
 # Data Cleaner Tasks
 
-t_standardize_date_formats:
+---
+t_handle_missing_values:
   description: >
-    Standardize the date format in all identified columns to the 'dd/mm/yyyy' standard.
-    This task should handle multiple input formats (e.g., '01 Jan 2025', 'mm/dd/yyyy') and convert them.
+    Handle missing values in the DataFrame. Based on the auditor's findings and context,
+    the agent must decide how to proceed.
+    Primary options are:
+    1. Fill all missing values with a placeholder, such as 0.
+    2. Leave the missing values as they are, but confirm their presence.
   expected_output: >
-    The DataFrame with the specified date columns uniformly formatted. A confirmation message
-    listing the columns that were standardized.
+    The DataFrame with the specified missing values handled. A confirmation message
+    detailing which columns had their missing values treated and the chosen method.
+  agent: data_cleaner
+  context: t_find_missing_values
+
+---
+t_remove_duplicates:
+  description: >
+    Remove all duplicate rows from the DataFrame. This task ensures that each
+    record is unique, which is essential for accurate analysis.
+    The agent should not ask for user approval, as this is a standard cleaning step.
+  expected_output: >
+    The DataFrame with all duplicate rows removed. A confirmation message
+    stating the number of rows that were removed.
   agent: data_cleaner
   context:
-    - t_check_date_formats
+    - t_handle_missing_values
 
 ---
 t_normalize_numeric_formats:
@@ -201,6 +214,18 @@ t_normalize_numeric_formats:
   agent: data_cleaner
   context:
     - t_analyze_numeric_scale_and_format
+
+---
+t_standardize_date_formats:
+  description: >
+    Standardize the date format in all identified columns to the 'dd/mm/yyyy' standard.
+    This task should handle multiple input formats (e.g., '01 Jan 2025', 'mm/dd/yyyy') and convert them.
+  expected_output: >
+    The DataFrame with the specified date columns uniformly formatted. A confirmation message
+    listing the columns that were standardized.
+  agent: data_cleaner
+  context:
+    - t_check_date_formats
 
 ---
 t_fix_encoding_and_characters:
@@ -237,9 +262,9 @@ t_standardize_column_names:
     list of the old and new column names.
   agent: data_cleaner
   context:
-    - t_propose_initial_cleaning_plan
+    - t_propose_and_apply_category_standardization
 
----
+
 # Data Modeller Tasks
 
 ---
@@ -253,7 +278,7 @@ t_analyze_dataset_for_modeling:
     and a preliminary assessment of the dataset's granularity.
   agent: data_modeller
   context:
-    - t_standardize_categories # This is the last cleaning task.
+    - t_standardize_column_names # This is the last cleaning task.
 
 ---
 t_propose_table_name:
@@ -307,9 +332,10 @@ t_propose_bi_structure:
   context:
     - t_identify_primary_keys
 
----
-# Chat Consultant final task REVISAR E INCLUIR TODAS AS TAREFAS
 
+# Chat Consultant final task
+
+---
 t_present_final_report:
   description: >
     Combine the results of all cleaning actions and the modeling suggestions into a final,
@@ -323,17 +349,24 @@ t_present_final_report:
     - A clear, call-to-action to download the cleaned CSV file with the final table name.
   agent: chat_consultant
   context:
-    - t_standardize_column_names
+    - t_find_missing_values
     - t_handle_missing_values
+    - t_detect_duplicates
     - t_remove_duplicates
+    - t_check_data_types_and_inconsistencies
+    - t_analyze_numeric_scale_and_format
     - t_normalize_numeric_formats
+    - t_check_date_formats
     - t_standardize_date_formats
+    - t_detect_encoding_and_special_chars
     - t_fix_encoding_and_characters
-    - t_propose_and_apply_category_standardization
-    - t_identify_outliers
+    - t_identify_outliers_numbers
     - t_identify_date_outliers
+    - t_analyze_categorical_frequency
+    - t_ropose_and_apply_category_standardization
+    - t_standardize_column_names
     - t_analyze_dataset_for_modeling
     - t_propose_table_name
+    - t_apply_table_rename
     - t_identify_primary_keys
     - t_propose_bi_structure
-    - t_apply_table_rename
