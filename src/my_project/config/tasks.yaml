@@ -1,6 +1,6 @@
 # Chat Consultant Start Task
 
----
+
 t_initial_greeting_and_confirmation:
   description: >
     Greet the user in a friendly tone and confirm that the database files have been uploaded correctly.
@@ -14,7 +14,7 @@ t_initial_greeting_and_confirmation:
 
 # Data Auditor Tasks
 
----
+
 t_analyze_dataframe_info:
   description: >
     Analyze the raw DataFrame to get basic information about its structure.
@@ -25,7 +25,7 @@ t_analyze_dataframe_info:
     data types, and non-null values count for each column.
   agent: data_auditor
 
----
+
 t_find_missing_values:
   description: >
     Scan the DataFrame to identify all columns with missing values.
@@ -37,7 +37,7 @@ t_find_missing_values:
   context:
     - t_analyze_dataframe_info
 
----
+
 t_detect_duplicates:
   description: >
     Check the entire DataFrame for any duplicate rows.
@@ -49,7 +49,7 @@ t_detect_duplicates:
   context:
     - t_analyze_dataframe_info
 
----
+
 t_check_data_types_and_inconsistencies:
   description: >
     Inspect each column to detect potential data type issues.
@@ -61,7 +61,7 @@ t_check_data_types_and_inconsistencies:
   context:
     - t_analyze_dataframe_info
 
----
+
 t_analyze_numeric_scale_and_format:
   description: >
     Analyze numeric columns to identify potential scaling issues and formatting inconsistencies.
@@ -76,7 +76,7 @@ t_analyze_numeric_scale_and_format:
   context:
     - t_analyze_dataframe_info
 
----
+
 t_check_date_formats:
   description: >
     Inspect all datetime-like columns to identify inconsistent date formats.
@@ -89,7 +89,7 @@ t_check_date_formats:
   context:
     - t_analyze_dataframe_info
 
----
+
 t_detect_encoding_and_special_chars:
   description: >
     Scan the entire dataset for encoding-related errors and special characters that may cause issues.
@@ -101,7 +101,7 @@ t_detect_encoding_and_special_chars:
   context:
     - t_analyze_dataframe_info
 
----
+
 t_identify_outliers_numbers:
   description: >
     Perform outlier detection on all numeric columns using statistical methods like IQR.
@@ -114,7 +114,7 @@ t_identify_outliers_numbers:
   context:
     - t_analyze_dataframe_info
 
----
+
 t_identify_date_outliers:
   description: >
     Analyze all datetime columns to identify outliers in the date values.
@@ -128,7 +128,7 @@ t_identify_date_outliers:
   context:
     - t_check_date_formats
 
----
+
 t_analyze_categorical_frequency:
   description: >
     Analyze all categorical (object/string) columns to summarize value frequencies.
@@ -141,7 +141,7 @@ t_analyze_categorical_frequency:
   context:
     - t_analyze_dataframe_info
 
----
+
 t_propose_initial_cleaning_plan:
   description: >
     Based on all previous audit tasks, formulate a clear and actionable cleaning plan.
@@ -176,7 +176,7 @@ t_propose_initial_cleaning_plan:
 
 # Data Cleaner Tasks
 
----
+
 t_handle_missing_values:
   description: >
     Handle missing values in the DataFrame. Based on the auditor's findings and context,
@@ -190,7 +190,7 @@ t_handle_missing_values:
   agent: data_cleaner
   context: t_find_missing_values
 
----
+
 t_remove_duplicates:
   description: >
     Remove all duplicate rows from the DataFrame. This task ensures that each
@@ -203,7 +203,7 @@ t_remove_duplicates:
   context:
     - t_handle_missing_values
 
----
+
 t_normalize_numeric_formats:
   description: >
     Normalize numeric formats by replacing comma-based decimal separators with periods and
@@ -215,7 +215,7 @@ t_normalize_numeric_formats:
   context:
     - t_analyze_numeric_scale_and_format
 
----
+
 t_standardize_date_formats:
   description: >
     Standardize the date format in all identified columns to the 'dd/mm/yyyy' standard.
@@ -227,7 +227,7 @@ t_standardize_date_formats:
   context:
     - t_check_date_formats
 
----
+
 t_fix_encoding_and_characters:
   description: >
     Apply the necessary transformations to fix encoding errors and remove special characters
@@ -238,7 +238,7 @@ t_fix_encoding_and_characters:
   context:
     - t_detect_encoding_and_special_chars
 
----
+
 t_propose_and_apply_category_standardization:
   description: >
     Based on the analysis of categorical frequencies, identify abbreviation, acronmyms or similar but inconsistent
@@ -251,7 +251,7 @@ t_propose_and_apply_category_standardization:
   context:
     - t_analyze_categorical_frequency
 
----
+
 t_standardize_column_names:
   description: >
     Standardize all column names to a consistent format (e.g., snake_case, all lowercase).
@@ -267,7 +267,7 @@ t_standardize_column_names:
 
 # Data Modeller Tasks
 
----
+
 t_analyze_dataset_for_modeling:
   description: >
     Analyze the cleaned DataFrame to identify its core entities and potential relationships.
@@ -280,7 +280,7 @@ t_analyze_dataset_for_modeling:
   context:
     - t_standardize_column_names 
 
----
+
 t_propose_table_name:
   description: >
     Based on the analysis of the dataset's content and structure, propose a single,
@@ -292,7 +292,7 @@ t_propose_table_name:
   context:
     - t_analyze_dataset_for_modeling
 
----
+
 t_apply_table_rename:
   description: >
     Based on the user's confirmed suggestion, apply the new name to the dataset.
@@ -305,7 +305,7 @@ t_apply_table_rename:
   context:
     - t_propose_table_name # The agent uses the proposed name as a reference
 
----
+
 t_identify_primary_keys:
   description: >
     Scan the columns to identify potential primary keys. A primary key must have
@@ -318,7 +318,7 @@ t_identify_primary_keys:
   context:
     - t_propose_table_name
 
----
+
 t_propose_bi_structure:
   description: >
     Synthesize all previous modeling analyses into a final set of suggestions for the
@@ -335,7 +335,7 @@ t_propose_bi_structure:
 
 # Chat Consultant final task
 
----
+
 t_present_final_report:
   description: >
     Combine the results of all cleaning actions and the modeling suggestions into a final,

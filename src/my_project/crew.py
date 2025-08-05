@@ -1,23 +1,15 @@
-
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
-from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
 import yaml
 
 @CrewBase
 class AugmentedBI():
-  agents: List[BaseAgent]
-  tasks: List[Task]
+
+  agents_config = 'config/agents.yaml'
+  tasks_config = 'config/tasks.yaml'
   
-  def load_yaml(self, file_name):
-      with open(file_name, 'r') as file:
-          return yaml.safe_load(file)
-
-
   def __init__(self, inputs):
-      self.agents_config = self.load_yaml('agents.yaml')
-      self.tasks_config = self.load_yaml('tasks.yaml')
       self.inputs = inputs
 
   @agent
@@ -49,17 +41,14 @@ class AugmentedBI():
     )
 
   # --Task Definitions ---
-  # The tasks below use the `self` reference to other tasks and agents defined above.
   
   # Chat Consultant Start Task
-
   @task
   def t_initial_greeting_and_confirmation(self) -> Task:
       return Task(config=self.tasks_config['t_initial_greeting_and_confirmation'], 
                   agent=self.chat_consultant())
 
-  # Data Auditor Tasks
-
+  # Data Auditor Tasks - Base analysis first
   @task
   def t_analyze_dataframe_info(self) -> Task:
       return Task(config=self.tasks_config['t_analyze_dataframe_info'], 
@@ -119,42 +108,36 @@ class AugmentedBI():
       return Task(config=self.tasks_config['t_analyze_categorical_frequency'], 
                   agent=self.data_auditor(),
                   context=[self.t_analyze_dataframe_info()])
+
   @task
   def t_propose_initial_cleaning_plan(self) -> Task:
       return Task(config=self.tasks_config['t_propose_initial_cleaning_plan'], 
                   agent=self.data_auditor(),
-                  context=[self.t_analyze_dataframe_info()])
-  
-  @task
-  def t_analyze_dataframe_info(self) -> Task:
-      return Task(config=self.tasks_config['t_analyze_dataframe_info'], 
-                  agent=self.data_auditor(),
                   context=[
-                        self.t_find_missing_values(),
-                        self.t_detect_duplicates(),
-                        self.t_check_data_types_and_inconsistencies(),
-                        self.t_check_date_formats(),
-                        self.t_analyze_numeric_scale_and_format(),
-                        self.t_detect_encoding_and_special_chars(),
-                        self.t_analyze_categorical_frequency(),
-                        self.t_identify_date_outliers()
+                      self.t_find_missing_values(),
+                      self.t_detect_duplicates(),
+                      self.t_check_data_types_and_inconsistencies(),
+                      self.t_check_date_formats(),
+                      self.t_analyze_numeric_scale_and_format(),
+                      self.t_detect_encoding_and_special_chars(),
+                      self.t_identify_outliers_numbers(),
+                      self.t_identify_date_outliers(),
+                      self.t_analyze_categorical_frequency()
                   ])
   
-# Data Cleaner Tasks
-
+  # Data Cleaner Tasks
   @task
   def t_handle_missing_values(self) -> Task:
       return Task(config=self.tasks_config['t_handle_missing_values'],
                   agent=self.data_cleaner(),
-                  context=[self.t_find_missing_values]
-                  )
+                  context=[self.t_find_missing_values()])
 
   @task
   def t_remove_duplicates(self) -> Task:
         return Task(config=self.tasks_config['t_remove_duplicates'],
                     agent=self.data_cleaner(),
-                    context=[self.t_detect_duplicates]
-                    )
+                    context=[self.t_detect_duplicates()])
+
   @task
   def t_standardize_date_formats(self) -> Task:
         return Task(config=self.tasks_config['t_standardize_date_formats'], 
@@ -186,7 +169,6 @@ class AugmentedBI():
                   context=[self.t_propose_and_apply_category_standardization()])
   
   # Data Modeller Tasks
-
   @task
   def t_analyze_dataset_for_modeling(self) -> Task:
       return Task(config=self.tasks_config['t_analyze_dataset_for_modeling'], 
@@ -218,7 +200,6 @@ class AugmentedBI():
                   context=[self.t_identify_primary_keys()])
   
   # Chat Consultant final task
- 
   @task
   def t_present_final_report(self) -> Task:
     return Task(config=self.tasks_config['t_present_final_report'], 
@@ -248,10 +229,40 @@ class AugmentedBI():
     ])
 
   @crew
-  def crew(self) -> Crew: # Creates the AugmentedBI crew
+  def crew(self) -> Crew:
     return Crew(
-      agents=self.agents, # Automatically created by the @agent decorator
-      tasks=self.tasks, # Automatically created by the @task decorator
+      agents=[
+                self.chat_consultant(),
+                self.data_auditor(),
+                self.data_cleaner(),
+                self.data_modeller()
+            ],
+      tasks=[
+        self.t_initial_greeting_and_confirmation(),
+        self.t_analyze_dataframe_info(),
+        self.t_find_missing_values(),
+        self.t_handle_missing_values(),
+        self.t_detect_duplicates(),
+        self.t_remove_duplicates(),
+        self.t_check_data_types_and_inconsistencies(),
+        self.t_analyze_numeric_scale_and_format(),
+        self.t_normalize_numeric_formats(),
+        self.t_check_date_formats(),
+        self.t_standardize_date_formats(),
+        self.t_detect_encoding_and_special_chars(),
+        self.t_fix_encoding_and_characters(),
+        self.t_identify_outliers_numbers(),
+        self.t_identify_date_outliers(),
+        self.t_analyze_categorical_frequency(),
+        self.t_propose_and_apply_category_standardization(),
+        self.t_standardize_column_names(),
+        self.t_analyze_dataset_for_modeling(),
+        self.t_propose_table_name(),
+        self.t_apply_table_rename(),
+        self.t_identify_primary_keys(),
+        self.t_propose_bi_structure(),
+        self.t_present_final_report()
+      ],
       process=Process.sequential,
       verbose=True,
     )
