@@ -10,15 +10,16 @@ class AugmentedBI():
   agents: List[BaseAgent]
   tasks: List[Task]
   
+  def load_yaml(self, file_name):
+      with open(file_name, 'r') as file:
+          return yaml.safe_load(file)
+
+
   def __init__(self, inputs):
       self.agents_config = self.load_yaml('agents.yaml')
       self.tasks_config = self.load_yaml('tasks.yaml')
       self.inputs = inputs
 
-  def load_yaml(self, file_name):
-      with open(file_name, 'r') as file:
-          return yaml.safe_load(file)
-      
   @agent
   def chat_consultant(self) -> Agent:
     return Agent(
@@ -58,6 +59,12 @@ class AugmentedBI():
                   agent=self.chat_consultant())
 
   # Data Auditor Tasks
+
+  @task
+  def t_analyze_dataframe_info(self) -> Task:
+      return Task(config=self.tasks_config['t_analyze_dataframe_info'], 
+                  agent=self.data_auditor(),
+                  context=[self.t_initial_greeting_and_confirmation()])
 
   @task
   def t_find_missing_values(self) -> Task:
@@ -106,13 +113,7 @@ class AugmentedBI():
       return Task(config=self.tasks_config['t_identify_date_outliers'], 
                   agent=self.data_auditor(),
                   context=[self.t_analyze_dataframe_info()])
-  
-  @task
-  def t_analyze_dataframe_info(self) -> Task:
-      return Task(config=self.tasks_config['t_analyze_dataframe_info'], 
-                  agent=self.data_auditor(),
-                  context=[self.t_analyze_dataframe_info()])
-  
+ 
   @task
   def t_analyze_categorical_frequency(self) -> Task:
       return Task(config=self.tasks_config['t_analyze_categorical_frequency'], 
@@ -208,7 +209,7 @@ class AugmentedBI():
   def t_identify_primary_keys(self) -> Task:
       return Task(config=self.tasks_config['t_identify_primary_keys'], 
                   agent=self.data_modeller(),
-                  context=[self.t_propose_table_name()])
+                  context=[self.t_apply_table_rename()])
   
   @task
   def t_propose_bi_structure(self) -> Task:

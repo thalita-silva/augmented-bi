@@ -241,7 +241,7 @@ t_fix_encoding_and_characters:
 ---
 t_propose_and_apply_category_standardization:
   description: >
-    Based on the analysis of categorical frequencies, identify similar but inconsistent
+    Based on the analysis of categorical frequencies, identify abbreviation, acronmyms or similar but inconsistent
     values (e.g., 'Heinken', 'HNK', 'Heinkken'). Suggest a single, standardized name
     for these values and, with user approval, apply the corrections.
   expected_output: >
@@ -278,7 +278,7 @@ t_analyze_dataset_for_modeling:
     and a preliminary assessment of the dataset's granularity.
   agent: data_modeller
   context:
-    - t_standardize_column_names # This is the last cleaning task.
+    - t_standardize_column_names 
 
 ---
 t_propose_table_name:

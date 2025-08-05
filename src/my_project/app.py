@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from main import run_agents
 import io
-import os
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide")
@@ -35,7 +34,6 @@ if uploaded_file is not None:
         if file_extension == "csv":
             df = pd.read_csv(uploaded_file)
         elif file_extension == "xlsx":
-            # Corrected a typo here: `pdf = pd.read_excel...` was redundant
             df = pd.read_excel(uploaded_file, engine='openpyxl')
         else:
             st.error("Unsupported file type. Please upload a CSV or XLSX file.")
