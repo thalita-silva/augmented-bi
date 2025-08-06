@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 import os
-from crew import AugmentedBICrew # A classe AugmentedBICrew é importada aqui
+from crew import AugmentedBICrew
 
 # --- Page Configuration ---
 st.set_page_config(page_icon="🤖", page_title="CleanMyData.ai", layout="wide")
