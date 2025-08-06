@@ -1,39 +1,46 @@
+# src/my_project/crew.py
+
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from typing import List
 import yaml
 import os
 import pandas as pd
-from my_project.tools.auditor_tools import DataAuditorTools
-from my_project.tools.cleaner_tools import DataCleanerTools
-from my_project.tools.modeller_tools import DataModellerTools
+# Using relative imports for modules within the same 'my_project' package
+from .tools.auditor_tools import DataAuditorTools
+from .tools.cleaner_tools import DataCleanerTools
+from .tools.modeller_tools import DataModellerTools
 
 # Set your OpenAI API key
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY") 
 
 @CrewBase
-class AugmentedBI():
-  """Augmented BI Data Cleaning and Modeling Crew"""
+class AugmentedBICrew():
+    """Augmented BI Data Cleaning and Modeling Crew"""
 
-  def __init__(self, inputs: dict):
-        # inputs is a dictionary containing the DataFrame for the crew to work on
+    def __init__(self, inputs: dict):
         self.inputs = inputs
         self.df = inputs.get('dataframe', pd.DataFrame())
-        self.agents_config = self.load_yaml('agents.yaml')
-        self.tasks_config = self.load_yaml('tasks.yaml')
+        # Load YAML files using a path relative to the current file's location
+        self.agents_config = self.load_yaml('config/agents.yaml')
+        self.tasks_config = self.load_yaml('config/tasks.yaml')
 
         # Instantiate tools with the DataFrame once
         self.auditor_tools = DataAuditorTools(df=self.df)
         self.cleaner_tools = DataCleanerTools(df=self.df)
         self.modeller_tools = DataModellerTools(df=self.df)
 
-  def load_yaml(self, file_name):
-        with open(f'src/my_project/config/{file_name}', 'r') as file:
+    def load_yaml(self, file_path: str):
+        # The path is now relative to 'src/my_project/' where crew.py resides
+        # For example, 'config/agents.yaml' correctly points to 'src/my_project/config/agents.yaml'
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        full_path = os.path.join(base_dir, file_path)
+        with open(full_path, 'r') as file:
             return yaml.safe_load(file)
-
-  def get_final_dataframe(self) -> pd.DataFrame:
-      """Helper method to retrieve the final cleaned DataFrame."""
-      return self.cleaner_tools.get_final_dataframe()
+            
+    def get_final_dataframe(self) -> pd.DataFrame:
+        """Helper method to retrieve the final cleaned DataFrame from the tools."""
+        return self.cleaner_tools.get_final_dataframe()
 
   # --- Agent Definitions ---
   @agent
