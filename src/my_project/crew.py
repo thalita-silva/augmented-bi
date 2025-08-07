@@ -46,7 +46,8 @@ class AugmentedBI():
   @task
   def t_initial_greeting_and_confirmation(self) -> Task:
       return Task(config=self.tasks_config['t_initial_greeting_and_confirmation'], 
-                  agent=self.chat_consultant())
+                  agent=self.chat_consultant(),
+                  inputs=self.inputs)
 
   # Data Auditor Tasks - Base analysis first
   @task
