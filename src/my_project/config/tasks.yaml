@@ -3,12 +3,11 @@
 
 t_initial_greeting_and_confirmation:
   description: >
-    Greet the user in a friendly tone and confirm that the database files have been uploaded correctly.
-    Your goal is to prepare the user for the upcoming data analysis tasks and get their explicit confirmation to proceed.
-    You should not perform any analysis yourself, just confirm and ask for the "go-ahead".
+    Your goal is to read the {question} provided by the user for the upcoming data analysis tasks.
+    You should structure the serialized input from user to be used in the next step.
   expected_output: >
-    A simple, conversational message to the user, similar to:
-    "Olá! Recebi seu arquivo. Vamos iniciar a análise de qualidade e limpeza de dados? (Sim/Não)"
+    A structured data object containing the question and the data records.
+    The output should be a dictionary with the keys 'question' and 'data', where 'data' is a list of dictionaries representing the DataFrame rows.
   agent: chat_consultant
 
 
@@ -188,7 +187,8 @@ t_handle_missing_values:
     The DataFrame with the specified missing values handled. A confirmation message
     detailing which columns had their missing values treated and the chosen method.
   agent: data_cleaner
-  context: t_find_missing_values
+  context: 
+    - t_find_missing_values
 
 
 t_remove_duplicates:
@@ -332,10 +332,7 @@ t_propose_bi_structure:
   context:
     - t_identify_primary_keys
 
-
 # Chat Consultant final task
-
-
 t_present_final_report:
   description: >
     Combine the results of all cleaning actions and the modeling suggestions into a final,
@@ -363,7 +360,7 @@ t_present_final_report:
     - t_identify_outliers_numbers
     - t_identify_date_outliers
     - t_analyze_categorical_frequency
-    - t_ropose_and_apply_category_standardization
+    - t_propose_and_apply_category_standardization
     - t_standardize_column_names
     - t_analyze_dataset_for_modeling
     - t_propose_table_name
